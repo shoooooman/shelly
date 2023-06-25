@@ -1,4 +1,8 @@
-use std::{fs::{File, OpenOptions}, io::{self, Seek, Read, Write}, path::Path};
+use std::{
+    fs::{File, OpenOptions},
+    io::{self, Read, Seek, Write},
+    path::Path,
+};
 
 pub const PAGE_SIZE: usize = 4096;
 
@@ -46,12 +50,12 @@ pub struct DiskManager {
 
 impl DiskManager {
     pub fn new(heap_file: File) -> io::Result<Self> {
-       let heap_file_size = heap_file.metadata()?.len();
-       let next_page_id = heap_file_size / PAGE_SIZE as u64;
-       Ok(Self {
-        heap_file,
-        next_page_id,
-       })
+        let heap_file_size = heap_file.metadata()?.len();
+        let next_page_id = heap_file_size / PAGE_SIZE as u64;
+        Ok(Self {
+            heap_file,
+            next_page_id,
+        })
     }
 
     pub fn open(heap_file_path: impl AsRef<Path>) -> io::Result<Self> {
@@ -81,7 +85,10 @@ mod tests {
     use super::DiskManager;
 
     mod disk_manager {
-        use std::{fs::{OpenOptions, remove_file, File}, io::{Write, Read, Seek}};
+        use std::{
+            fs::{remove_file, File, OpenOptions},
+            io::{Read, Seek, Write},
+        };
 
         use crate::disk::PageId;
 
@@ -95,8 +102,14 @@ mod tests {
             let mut disk_manager = DiskManager::new(file).unwrap();
 
             let mut contents = String::new();
-            disk_manager.heap_file.seek(std::io::SeekFrom::Start(0)).unwrap();
-            disk_manager.heap_file.read_to_string(&mut contents).unwrap();
+            disk_manager
+                .heap_file
+                .seek(std::io::SeekFrom::Start(0))
+                .unwrap();
+            disk_manager
+                .heap_file
+                .read_to_string(&mut contents)
+                .unwrap();
 
             assert_eq!(contents, "Hello, World!");
             assert_eq!(disk_manager.next_page_id, 0);
@@ -112,8 +125,14 @@ mod tests {
             let mut disk_manager = DiskManager::open(file_name).unwrap();
 
             let mut contents = String::new();
-            disk_manager.heap_file.seek(std::io::SeekFrom::Start(0)).unwrap();
-            disk_manager.heap_file.read_to_string(&mut contents).unwrap();
+            disk_manager
+                .heap_file
+                .seek(std::io::SeekFrom::Start(0))
+                .unwrap();
+            disk_manager
+                .heap_file
+                .read_to_string(&mut contents)
+                .unwrap();
             assert_eq!(contents, "Hello, World!");
             assert_eq!(disk_manager.next_page_id, 0);
 
@@ -149,8 +168,14 @@ mod tests {
             disk_manager.write_page_data(page_id, buf).unwrap();
 
             let mut contents = String::new();
-            disk_manager.heap_file.seek(std::io::SeekFrom::Start(0)).unwrap();
-            disk_manager.heap_file.read_to_string(&mut contents).unwrap();
+            disk_manager
+                .heap_file
+                .seek(std::io::SeekFrom::Start(0))
+                .unwrap();
+            disk_manager
+                .heap_file
+                .read_to_string(&mut contents)
+                .unwrap();
 
             assert_eq!(contents, "Hello, World!");
 
@@ -165,7 +190,7 @@ mod tests {
                 .open(file_name)
                 .unwrap();
             file.write_all(contents).unwrap();
-            return file
+            return file;
         }
     }
 }
