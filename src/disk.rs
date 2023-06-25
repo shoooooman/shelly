@@ -6,7 +6,7 @@ use std::{
 
 pub const PAGE_SIZE: usize = 4096;
 
-#[derive(Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct PageId(pub u64);
 impl PageId {
     pub const INVALID_PAGE_ID: PageId = PageId(u64::MAX);
@@ -94,6 +94,49 @@ impl DiskManager {
 #[cfg(test)]
 mod test_page_id {
     use super::PageId;
+
+    mod test_valid {
+        use super::PageId;
+
+        #[test]
+        fn test_valid_some() {
+            let page_id = PageId(0);
+
+            assert_eq!(page_id.valid(), Some(PageId(0)));
+        }
+
+        #[test]
+        fn test_valid_none() {
+            let page_id = PageId::INVALID_PAGE_ID;
+
+            assert_eq!(page_id.valid(), None);
+        }
+    }
+
+    #[test]
+    fn test_default() {
+        assert_eq!(PageId::default(), PageId::INVALID_PAGE_ID);
+    }
+
+    mod test_from {
+        use crate::disk::PageId;
+
+        #[test]
+        fn test_from_some() {
+            assert_eq!(PageId::from(PageId(0)), PageId(0));
+        }
+
+        #[test]
+        fn test_from_none() {
+            assert_eq!(PageId::from(None), PageId::INVALID_PAGE_ID);
+        }
+
+        #[test]
+        fn test_from_vec() {
+            let vec: &[u8] = &[1, 0, 0, 0, 0, 0, 0, 0];
+            assert_eq!(PageId::from(vec), PageId(1));
+        }
+    }
 }
 
 #[cfg(test)]
