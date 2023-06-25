@@ -92,7 +92,7 @@ impl DiskManager {
 }
 
 #[cfg(test)]
-mod tests {
+mod test_disk_manager {
     use super::DiskManager;
 
     mod disk_manager {
@@ -106,7 +106,7 @@ mod tests {
         use super::DiskManager;
 
         #[test]
-        fn test_disk_manager_new() {
+        fn test_new() {
             let file_name = "test_disk_manager_new.txt";
             let file = create_tmp_file(file_name, b"Hello, World!");
 
@@ -129,7 +129,7 @@ mod tests {
         }
 
         #[test]
-        fn test_disk_manager_open() {
+        fn test_open() {
             let file_name = "test_disk_manager_open.txt";
             create_tmp_file(file_name, b"Hello, World!");
 
@@ -151,7 +151,7 @@ mod tests {
         }
 
         #[test]
-        fn test_disk_manager_read_page_data() {
+        fn test_read_page_data() {
             let file_name = "test_disk_manager_read_page_data.txt";
             create_tmp_file(file_name, b"Hello, World!");
 
@@ -168,7 +168,7 @@ mod tests {
         }
 
         #[test]
-        fn test_disk_manager_write_page_data() {
+        fn test_write_page_data() {
             let file_name = "test_disk_manager_write_page_data.txt";
 
             let mut disk_manager = DiskManager::open(file_name).unwrap();
@@ -193,7 +193,7 @@ mod tests {
         }
 
         #[test]
-        fn test_disk_manager_allocate_page() {
+        fn test_allocate_page() {
             let file_name = "test_disk_manager_write_page_data.txt";
 
             let mut disk_manager = DiskManager::open(file_name).unwrap();
