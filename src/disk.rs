@@ -92,128 +92,129 @@ impl DiskManager {
 }
 
 #[cfg(test)]
+mod test_page_id {
+    use super::PageId;
+}
+
+#[cfg(test)]
 mod test_disk_manager {
     use super::DiskManager;
 
-    mod disk_manager {
-        use std::{
-            fs::{remove_file, File, OpenOptions},
-            io::{Read, Seek, Write},
-        };
+    use std::{
+        fs::{remove_file, File, OpenOptions},
+        io::{Read, Seek, Write},
+    };
 
-        use crate::disk::PageId;
+    use crate::disk::PageId;
 
-        use super::DiskManager;
+    #[test]
+    fn test_new() {
+        let file_name = "test_disk_manager_new.txt";
+        let file = create_tmp_file(file_name, b"Hello, World!");
 
-        #[test]
-        fn test_new() {
-            let file_name = "test_disk_manager_new.txt";
-            let file = create_tmp_file(file_name, b"Hello, World!");
+        let mut disk_manager = DiskManager::new(file).unwrap();
 
-            let mut disk_manager = DiskManager::new(file).unwrap();
+        let mut contents = String::new();
+        disk_manager
+            .heap_file
+            .seek(std::io::SeekFrom::Start(0))
+            .unwrap();
+        disk_manager
+            .heap_file
+            .read_to_string(&mut contents)
+            .unwrap();
 
-            let mut contents = String::new();
-            disk_manager
-                .heap_file
-                .seek(std::io::SeekFrom::Start(0))
-                .unwrap();
-            disk_manager
-                .heap_file
-                .read_to_string(&mut contents)
-                .unwrap();
+        assert_eq!(contents, "Hello, World!");
+        assert_eq!(disk_manager.next_page_id, 0);
 
-            assert_eq!(contents, "Hello, World!");
-            assert_eq!(disk_manager.next_page_id, 0);
+        remove_file(file_name).unwrap();
+    }
 
-            remove_file(file_name).unwrap();
-        }
+    #[test]
+    fn test_open() {
+        let file_name = "test_disk_manager_open.txt";
+        create_tmp_file(file_name, b"Hello, World!");
 
-        #[test]
-        fn test_open() {
-            let file_name = "test_disk_manager_open.txt";
-            create_tmp_file(file_name, b"Hello, World!");
+        let mut disk_manager = DiskManager::open(file_name).unwrap();
 
-            let mut disk_manager = DiskManager::open(file_name).unwrap();
+        let mut contents = String::new();
+        disk_manager
+            .heap_file
+            .seek(std::io::SeekFrom::Start(0))
+            .unwrap();
+        disk_manager
+            .heap_file
+            .read_to_string(&mut contents)
+            .unwrap();
+        assert_eq!(contents, "Hello, World!");
+        assert_eq!(disk_manager.next_page_id, 0);
 
-            let mut contents = String::new();
-            disk_manager
-                .heap_file
-                .seek(std::io::SeekFrom::Start(0))
-                .unwrap();
-            disk_manager
-                .heap_file
-                .read_to_string(&mut contents)
-                .unwrap();
-            assert_eq!(contents, "Hello, World!");
-            assert_eq!(disk_manager.next_page_id, 0);
+        remove_file(file_name).unwrap();
+    }
 
-            remove_file(file_name).unwrap();
-        }
+    #[test]
+    fn test_read_page_data() {
+        let file_name = "test_disk_manager_read_page_data.txt";
+        create_tmp_file(file_name, b"Hello, World!");
 
-        #[test]
-        fn test_read_page_data() {
-            let file_name = "test_disk_manager_read_page_data.txt";
-            create_tmp_file(file_name, b"Hello, World!");
+        let mut disk_manager = DiskManager::open(file_name).unwrap();
+        let page_id = PageId(0);
+        // len("Hello, World!") = 13
+        let mut buf = vec![0; 13];
 
-            let mut disk_manager = DiskManager::open(file_name).unwrap();
-            let page_id = PageId(0);
-            // len("Hello, World!") = 13
-            let mut buf = vec![0; 13];
+        disk_manager.read_page_data(page_id, &mut buf).unwrap();
 
-            disk_manager.read_page_data(page_id, &mut buf).unwrap();
+        assert_eq!(buf, b"Hello, World!");
 
-            assert_eq!(buf, b"Hello, World!");
+        remove_file(file_name).unwrap();
+    }
 
-            remove_file(file_name).unwrap();
-        }
+    #[test]
+    fn test_write_page_data() {
+        let file_name = "test_disk_manager_write_page_data.txt";
 
-        #[test]
-        fn test_write_page_data() {
-            let file_name = "test_disk_manager_write_page_data.txt";
+        let mut disk_manager = DiskManager::open(file_name).unwrap();
+        let page_id = PageId(0);
+        let buf = b"Hello, World!";
 
-            let mut disk_manager = DiskManager::open(file_name).unwrap();
-            let page_id = PageId(0);
-            let buf = b"Hello, World!";
+        disk_manager.write_page_data(page_id, buf).unwrap();
 
-            disk_manager.write_page_data(page_id, buf).unwrap();
+        let mut contents = String::new();
+        disk_manager
+            .heap_file
+            .seek(std::io::SeekFrom::Start(0))
+            .unwrap();
+        disk_manager
+            .heap_file
+            .read_to_string(&mut contents)
+            .unwrap();
 
-            let mut contents = String::new();
-            disk_manager
-                .heap_file
-                .seek(std::io::SeekFrom::Start(0))
-                .unwrap();
-            disk_manager
-                .heap_file
-                .read_to_string(&mut contents)
-                .unwrap();
+        assert_eq!(contents, "Hello, World!");
 
-            assert_eq!(contents, "Hello, World!");
+        remove_file(file_name).unwrap();
+    }
 
-            remove_file(file_name).unwrap();
-        }
+    #[test]
+    fn test_allocate_page() {
+        let file_name = "test_disk_manager_write_page_data.txt";
 
-        #[test]
-        fn test_allocate_page() {
-            let file_name = "test_disk_manager_write_page_data.txt";
+        let mut disk_manager = DiskManager::open(file_name).unwrap();
 
-            let mut disk_manager = DiskManager::open(file_name).unwrap();
+        assert_eq!(disk_manager.next_page_id, 0);
+        disk_manager.allocate_page();
+        assert_eq!(disk_manager.next_page_id, 1);
 
-            assert_eq!(disk_manager.next_page_id, 0);
-            disk_manager.allocate_page();
-            assert_eq!(disk_manager.next_page_id, 1);
+        remove_file(file_name).unwrap();
+    }
 
-            remove_file(file_name).unwrap();
-        }
-
-        fn create_tmp_file(file_name: &str, contents: &[u8]) -> File {
-            let mut file = OpenOptions::new()
-                .write(true)
-                .read(true)
-                .create(true)
-                .open(file_name)
-                .unwrap();
-            file.write_all(contents).unwrap();
-            return file;
-        }
+    fn create_tmp_file(file_name: &str, contents: &[u8]) -> File {
+        let mut file = OpenOptions::new()
+            .write(true)
+            .read(true)
+            .create(true)
+            .open(file_name)
+            .unwrap();
+        file.write_all(contents).unwrap();
+        return file;
     }
 }
