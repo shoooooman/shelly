@@ -78,6 +78,12 @@ impl DiskManager {
         self.heap_file.seek(io::SeekFrom::Start(offset))?;
         self.heap_file.write_all(data)
     }
+
+    pub fn allocate_page(&mut self) -> PageId {
+        let page_id = self.next_page_id;
+        self.next_page_id += 1;
+        PageId(page_id)
+    }
 }
 
 #[cfg(test)]
@@ -159,7 +165,6 @@ mod tests {
         #[test]
         fn test_disk_manager_write_page_data() {
             let file_name = "test_disk_manager_write_page_data.txt";
-            create_tmp_file(file_name, b"");
 
             let mut disk_manager = DiskManager::open(file_name).unwrap();
             let page_id = PageId(0);
@@ -178,6 +183,19 @@ mod tests {
                 .unwrap();
 
             assert_eq!(contents, "Hello, World!");
+
+            remove_file(file_name).unwrap();
+        }
+
+        #[test]
+        fn test_disk_manager_allocate_page() {
+            let file_name = "test_disk_manager_write_page_data.txt";
+
+            let mut disk_manager = DiskManager::open(file_name).unwrap();
+
+            assert_eq!(disk_manager.next_page_id, 0);
+            disk_manager.allocate_page();
+            assert_eq!(disk_manager.next_page_id, 1);
 
             remove_file(file_name).unwrap();
         }
